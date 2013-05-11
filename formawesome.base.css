@@ -1,0 +1,74 @@
+/* Wrappers around buttons should still be inline. */
+.formawesome-submit,
+.formawesome-button {
+  display: inline;
+}
+
+.formawesome-icon {
+  position: relative
+}
+
+.formawesome-icon i {
+  position: absolute
+}
+
+/* ====================================================================== */
+/* Twitter style overlay labels.                                          */
+/* ====================================================================== */
+.formawesome-overlay-label label {
+  position: absolute;
+  -webkit-transition: all 0.3s ease;
+  -moz-transition: all 0.3s ease;
+  -o-transition: all 0.3s ease;
+  transition: all 0.3s ease-out;
+}
+
+.formawesome-focused.formawesome-overlay-label label {
+  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=60)";
+  filter: alpha(opacity=60);
+  -moz-opacity: 0.6;
+  -khtml-opacity: 0.6;
+  opacity: 0.6;
+}
+
+.formawesome-filled.formawesome-overlay-label label {
+  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
+  filter: alpha(opacity=0);
+  -moz-opacity: 0.0;
+  -khtml-opacity: 0.0;
+  opacity: 0.0;
+  pointer-events: none
+}
+
+/* ====================================================================== */
+/* styleable checkboxes and radio buttons                                 */
+/* ====================================================================== */
+.formawesome-enhanced {
+  position: relative;
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  border: 2px dotted #AAA;
+}
+
+.formawesome-radio .formawesome-enhanced {
+  -webkit-border-radius: 0.5em;
+  border-radius: 0.5em;
+}
+
+.formawesome-filled .formawesome-enhanced {
+  background-color: #CCC;
+}
+
+.formawesome-enhanced input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
+  filter: alpha(opacity=0);
+  -moz-opacity: 0.0;
+  -khtml-opacity: 0.0;
+  opacity: 0.0;
+}
