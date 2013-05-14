@@ -13,9 +13,9 @@
 }
 
 /* ====================================================================== */
-/* Twitter style overlay labels.                                          */
+/* Twitter style placeholder labels.                                      */
 /* ====================================================================== */
-.formawesome-overlay-label label {
+.formawesome-placeholder-label label {
   position: absolute;
   -webkit-transition: all 0.3s ease;
   -moz-transition: all 0.3s ease;
@@ -23,7 +23,7 @@
   transition: all 0.3s ease-out;
 }
 
-.formawesome-focused.formawesome-overlay-label label {
+.formawesome-focused.formawesome-placeholder-label label {
   -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=60)";
   filter: alpha(opacity=60);
   -moz-opacity: 0.6;
@@ -31,7 +31,7 @@
   opacity: 0.6;
 }
 
-.formawesome-filled.formawesome-overlay-label label {
+.formawesome-filled.formawesome-placeholder-label label {
   -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
   filter: alpha(opacity=0);
   -moz-opacity: 0.0;

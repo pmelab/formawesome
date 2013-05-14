@@ -23,9 +23,8 @@ function formawesome_theme() {
  * Implements hook_page_build().
  */
 function formawesome_page_build() {
-  $select2 = libraries_get_path('select2');
-  drupal_add_js($select2 . '/select2.min.js');
-  drupal_add_css($select2 . '/select2.css');
+  drupal_add_js(libraries_get_path('select2') . '/select2.min.js');
+  drupal_add_css(drupal_get_path('module', 'formawesome') . '/formawesome.select2.css');
 }
 
 /**
@@ -44,14 +43,31 @@ function formawesome_module_implements_alter(&$info, $hook) {
  * Implements hook_element_info_alter().
  */
 function formawesome_element_info_alter(&$info) {
+  dpm($info);
   $excluded = array('hidden', 'token', 'value');
   foreach ($info as $id => $element) {
     if (array_key_exists('#input', $element) && $element['#input'] && !in_array($id, $excluded)) {
       $info[$id]['#theme_wrappers'][] = 'formawesome_element';
+      if (!is_array($info[$id]['#process'])) {
+        $info[$id]['#process'] = array();
+      }
+      array_unshift($info[$id]['#process'], 'formawesome_form_element_process');
     }
   }
+  array_unshift($info['file']['#theme_wrappers'], 'formawesome_enhance');
   array_unshift($info['checkbox']['#theme_wrappers'], 'formawesome_enhance');
   array_unshift($info['radio']['#theme_wrappers'], 'formawesome_enhance');
+}
+
+/**
+ * Process form elements.
+ */
+function formawesome_form_element_process(&$element, &$form_state, &$complete_form) {
+  if (isset($element['#title_display']) && $element['#title_display'] == 'placeholder') {
+    $element['#placeholder_label'] = TRUE;
+    $element['#title_display'] = 'before';
+  }
+  return $element;
 }
 
 /**
@@ -94,9 +110,9 @@ function theme_formawesome_element(&$variables) {
     $attributes['class'][] = 'formawesome-error';
   }
 
-  // Overlay label.
-  if (isset($element['#overlay_label']) && $element['#overlay_label']) {
-    $attributes['class'][] = 'formawesome-overlay-label';
+  // Placeholder label.
+  if (isset($element['#placeholder_label']) && $element['#placeholder_label']) {
+    $attributes['class'][] = 'formawesome-placeholder-label';
   }
 
   return '<div ' . drupal_attributes($attributes) . '>' . $content . '</div>';
@@ -123,16 +139,20 @@ function formawesome_menu() {
  * Test form callback.
  */
 function formawesome_test_form($form, &$form_state) {
+  $form['file'] = array(
+    '#type' => 'file',
+    '#title' => 'filetest',
+  );
   $form['text'] = array(
     '#type' => 'textfield',
     '#title' => 'Test',
     '#required' => TRUE,
-    '#overlay_label' => TRUE,
+    '#title_display' => 'placeholder',
   );
   $form['text2'] = array(
     '#type' => 'textfield',
     '#title' => 'Hui!',
-    '#overlay_label' => TRUE,
+    '#title_display' => 'placeholder',
   );
   $form['select'] = array(
     '#type' => 'select',
