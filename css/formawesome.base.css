@@ -46,13 +46,19 @@
 .formawesome-enhanced {
   position: relative;
   display: inline-block;
-  width: 1em;
-  height: 1em;
-  border: 2px dotted #AAA;
+  width: 0.9em;
+  height: 0.9em;
+  margin-right: 0.2em;
+  margin-top: -0.1em;
+  border: 2px solid #AAA;
+  vertical-align: middle;
 }
 
 .formawesome-radio .formawesome-enhanced {
   -webkit-border-radius: 0.5em;
+  -moz-border-radius: 0.5em;
+  -o-border-radius: 0.5em;
+  -ms-border-radius: 0.5em;
   border-radius: 0.5em;
 }
 

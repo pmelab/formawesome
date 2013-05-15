@@ -5,5 +5,5 @@ core = 7.x
 
 dependencies[] = ife
 
-stylesheets[all][] = formawesome.base.css
-scripts[] = formawesome.js
+stylesheets[all][] = css/formawesome.base.css
+scripts[] = js/formawesome.js

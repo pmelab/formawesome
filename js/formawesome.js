@@ -69,13 +69,4 @@
       });
     }
   };
-
-  /**
-   * Enhance select-elements with select2.
-   */
-  Drupal.behaviors.formawesome_select2 = {
-    attach: function (context, settings) {
-      $('select', context).select2();
-    }
-  };
 }(jQuery, Drupal));

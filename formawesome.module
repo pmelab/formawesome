@@ -4,7 +4,6 @@
  * Form enhancements. Make your forms awesome!
  */
 
-
 /**
  * Implements hook_theme().
  */
@@ -23,8 +22,23 @@ function formawesome_theme() {
  * Implements hook_page_build().
  */
 function formawesome_page_build() {
-  drupal_add_js(libraries_get_path('select2') . '/select2.min.js');
-  drupal_add_css(drupal_get_path('module', 'formawesome') . '/formawesome.select2.css');
+  global $theme;
+
+  $module = drupal_get_path('module', 'formawesome');
+  $library = libraries_get_path('select2');
+
+  $select = theme_get_setting('formawesome_select', $theme);
+
+  if ($select && $select != 'none') {
+    drupal_add_js($library . '/select2.min.js');
+    drupal_add_js($module . '/js/formawesome.select2.js');
+    if ($select == 'default') {
+      drupal_add_css($library . '/select2.css');
+    }
+    elseif ($select == 'naked') {
+      drupal_add_css($module . '/css/formawesome.select2.css');
+    }
+  }
 }
 
 /**
@@ -43,7 +57,6 @@ function formawesome_module_implements_alter(&$info, $hook) {
  * Implements hook_element_info_alter().
  */
 function formawesome_element_info_alter(&$info) {
-  dpm($info);
   $excluded = array('hidden', 'token', 'value');
   foreach ($info as $id => $element) {
     if (array_key_exists('#input', $element) && $element['#input'] && !in_array($id, $excluded)) {
@@ -54,7 +67,7 @@ function formawesome_element_info_alter(&$info) {
       array_unshift($info[$id]['#process'], 'formawesome_form_element_process');
     }
   }
-  array_unshift($info['file']['#theme_wrappers'], 'formawesome_enhance');
+  //array_unshift($info['file']['#theme_wrappers'], 'formawesome_enhance_file');
   array_unshift($info['checkbox']['#theme_wrappers'], 'formawesome_enhance');
   array_unshift($info['radio']['#theme_wrappers'], 'formawesome_enhance');
 }
@@ -74,8 +87,14 @@ function formawesome_form_element_process(&$element, &$form_state, &$complete_fo
  * Wrap checkboxes and radio buttons to enable css styling.
  */
 function theme_formawesome_enhance(&$variables) {
+  global $theme;
   $element = $variables['element'];
-  return '<span class="formawesome-enhanced">' . $element['#children'] . '</span>';
+  if (theme_get_setting('formawesome_checkboxes', $theme)) {
+    return '<span class="formawesome-enhanced">' . $element['#children'] . '</span>';
+  }
+  else {
+    return $element['#children'];
+  }
 }
 
 /**
@@ -118,91 +137,32 @@ function theme_formawesome_element(&$variables) {
   return '<div ' . drupal_attributes($attributes) . '>' . $content . '</div>';
 }
 
-// ======================================================================
-// TESTS
-// ======================================================================
 /**
- * Implements hook_menu().
+ * Implements hook_form_system_theme_settings_alter().
  */
-function formawesome_menu() {
-  return array(
-    'formawesome' => array(
-      'title' => 'FormAwesome Tests',
-      'page callback' => 'drupal_get_form',
-      'page arguments' => array('formawesome_test_form'),
-      'access callback' => TRUE,
+function formawesome_form_system_theme_settings_alter(&$form, &$form_state) {
+  $theme = count($form_state['build_info']['args']) > 0 ? $form_state['build_info']['args'][0] : FALSE;
+  $form['formawesome'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('FormAwesome'),
+    '#description' => t('Configure form enhancements for this theme.'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    'formawesome_select' => array(
+      '#type' => 'select',
+      '#title' => t('Selectboxes'),
+      '#options' => array(
+        'none' => t('None'),
+        'default' => t('Default'),
+        'naked' => t('Naked'),
+      ),
+      '#default_value' => theme_get_setting('formawesome_select', $theme),
+    ),
+    'formawesome_checkboxes' => array(
+      '#type' => 'checkbox',
+      '#title' => t('Checkboxes / Radio buttons'),
+      '#description' => t('Make checkboxes and radio buttons css styleable.'),
+      '#default_value' => theme_get_setting('formawesome_checkboxes', $theme),
     ),
   );
-}
-
-/**
- * Test form callback.
- */
-function formawesome_test_form($form, &$form_state) {
-  $form['file'] = array(
-    '#type' => 'file',
-    '#title' => 'filetest',
-  );
-  $form['text'] = array(
-    '#type' => 'textfield',
-    '#title' => 'Test',
-    '#required' => TRUE,
-    '#title_display' => 'placeholder',
-  );
-  $form['text2'] = array(
-    '#type' => 'textfield',
-    '#title' => 'Hui!',
-    '#title_display' => 'placeholder',
-  );
-  $form['select'] = array(
-    '#type' => 'select',
-    '#title' => 'Select!',
-    '#options' => array(
-      'one' => 'One',
-      'two' => 'Two',
-      'three' => 'Three',
-    ),
-  );
-  $form['multiple'] = array(
-    '#type' => 'select',
-    '#title' => 'Multiple!',
-    '#options' => array(
-      'one' => 'One',
-      'two' => 'Two',
-      'three' => 'Three',
-    ),
-    '#multiple' => TRUE,
-  );
-  $form['checkboxes'] = array(
-    '#type' => 'checkboxes',
-    '#title' => 'Checkboxes!',
-    '#options' => array(
-      'one' => 'One',
-      'two' => 'Two',
-      'three' => 'Three',
-    ),
-  );
-  $form['radios'] = array(
-    '#type' => 'radios',
-    '#title' => 'Radios!',
-    '#options' => array(
-      'one' => 'One',
-      'two' => 'Two',
-      'three' => 'Three',
-    ),
-  );
-  $form['submit'] = array(
-    '#type' => 'submit',
-    '#value' => 'Test',
-    '#icon' => 'search',
-  );
-  return $form;
-}
-
-function formawesome_test_form_validate($form, &$form_state) {
-  //form_set_error('text', 'Oi!');
-}
-
-function formawesome_test_form_submit($form, &$form_state) {
-  dpm($form_state);
 }
