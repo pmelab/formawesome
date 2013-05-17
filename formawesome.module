@@ -125,9 +125,11 @@ function theme_formawesome_element(&$variables) {
   }
 
   // Check if there are errors and add a class to the wrapper div.
+  /*
   if ($error = form_get_error($element)) {
     $attributes['class'][] = 'formawesome-error';
   }
+  */
 
   // Placeholder label.
   if (isset($element['#placeholder_label']) && $element['#placeholder_label']) {

@@ -63,6 +63,7 @@
 
         $input.focusin(focus);
         $input.focusout(blur);
+        $input.hover(focus, blur);
         $input.change(change);
         $input.keyup(change);
         change();
