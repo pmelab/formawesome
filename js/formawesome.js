@@ -24,6 +24,9 @@
 
         // Search the according wrapper element.
         var $wrapper = $input.parents('.formawesome-wrapper').first();
+        if ($wrapper.length === 0) {
+          return;
+        }
 
         /**
          * Set focused status on $wrapper.
