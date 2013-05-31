@@ -102,13 +102,17 @@ function theme_formawesome_enhance(&$variables) {
  */
 function theme_formawesome_element(&$variables) {
   $element = $variables['element'];
-
+  global $theme;
   $attributes = array();
   $attributes['class'] = array_key_exists('#wrapper_class', $element) ? $element['#wrapper_class'] : array();
   $attributes['class'][] = 'formawesome-wrapper';
   $attributes['class'][] = 'formawesome-' . $element['#type'];
 
   $content = $variables['element']['#children'];
+
+  if (!theme_get_setting('formawesome_checkboxes', $theme)) {
+    return $content;
+  }
 
   // Attach an icon if required.
   $icon = isset($element['#icon']) ? $element['#icon'] : FALSE;
