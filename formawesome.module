@@ -61,7 +61,7 @@ function formawesome_element_info_alter(&$info) {
   foreach ($info as $id => $element) {
     if (array_key_exists('#input', $element) && $element['#input'] && !in_array($id, $excluded)) {
       $info[$id]['#theme_wrappers'][] = 'formawesome_element';
-      if (!is_array($info[$id]['#process'])) {
+      if (!isset($info[$id]['#process']) || !is_array($info[$id]['#process'])) {
         $info[$id]['#process'] = array();
       }
       array_unshift($info[$id]['#process'], 'formawesome_form_element_process');
