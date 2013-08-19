@@ -2,8 +2,3 @@ name = FormAwesome
 description = Form enhancements for Drupal forms.
 package = User Interface
 core = 7.x
-
-dependencies[] = ife
-
-stylesheets[all][] = css/formawesome.base.css
-scripts[] = js/formawesome.js

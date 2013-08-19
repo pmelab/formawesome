@@ -6,9 +6,11 @@
   Drupal.behaviors.formawesome_select2 = {
     attach: function (context, settings) {
       $('select', context).not('.filter-list').select2({
-        width: '100%',
-        minimumResultsForSearch: 8
+        adaptContainerCssClass: function (c) { return null; },
+        adaptDropdownCssClass: function (c) { return null; },
+        minimumResultsForSearch: 8,
       });
     }
   };
+
 }(jQuery, Drupal));

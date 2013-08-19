@@ -12,32 +12,119 @@ function formawesome_theme() {
     'formawesome_element' => array(
       'render element' => 'element',
     ),
-    'formawesome_enhance' => array(
-      'render element' => 'element',
-    ),
   );
 }
 
 /**
- * Implements hook_page_build().
+ * Implements hook_field_widget_form_alter().
  */
-function formawesome_page_build() {
-  global $theme;
+function formawesome_field_widget_form_alter(&$element, &$form_state, $context) {
+  // Autocomplete field widgets that support multiple entries.
+  $formawesome_autocomplete_multiple = array(
+    'taxonomy_autocomplete',
+    'entityreference_autocomplete_tags',
+  );
 
+  // Autocomplete field widgets that support on the fly creation.
+  $formawesome_autocomplete_unknown = array(
+    'taxonomy_autocomplete',
+  );
+
+  $widget_type = $context['instance']['widget']['type'];
+
+  if (in_array($widget_type, $formawesome_autocomplete_multiple)) {
+    $element['#attributes']['data-max-values'] = $context['field']['cardinality'];
+  }
+  if (in_array($context['instance']['widget']['type'], $formawesome_autocomplete_unknown)) {
+    $element['#attributes']['data-allow-unknown'] = 'true';
+  }
+  else {
+    $element['#attributes']['data-allow-unknown'] = 'false';
+  }
+}
+
+/**
+ * Implements hook_library().
+ */
+function formawesome_library() {
+  // Retrieve basic paths.
   $module = drupal_get_path('module', 'formawesome');
-  $library = libraries_get_path('select2');
+  $select2 = libraries_get_path('select2');
 
-  $select = theme_get_setting('formawesome_select', $theme);
+  // Add formawesome base library.
+  $libraries['formawesome.base'] = array(
+    'title' => 'Formawesome basics',
+    'website' => 'http://www.zensations.at',
+    'version' => '1.0',
+    'js' => array(
+      $module . '/js/formawesome.base.js' => array(),
+    ),
+    'css' => array(
+      $module . '/css/formawesome.base.css' => array(
+        'type' => 'file',
+        'media' => 'screen',
+      ),
+    ),
+  );
 
-  if ($select && $select != 'none') {
-    drupal_add_js($library . '/select2.min.js');
-    drupal_add_js($module . '/js/formawesome.select2.js');
-    if ($select == 'default') {
-      drupal_add_css($library . '/select2.css');
-    }
-    elseif ($select == 'naked') {
-      drupal_add_css($module . '/css/formawesome.select2.css');
-    }
+  // Add formawesome select 2 integration for selectboxes.
+  $libraries['formawesome.select2'] = array(
+    'title' => 'Formawesome Select2',
+    'website' => 'http://www.zensations.at',
+    'version' => '1.0',
+    'js' => array(
+      $select2 . '/select2.min.js' => array(),
+      $module . '/js/formawesome.select2.js' => array(),
+    ),
+  );
+
+  global $theme;
+  if ($theme == 'seven') {
+    $libraries['formawesome.select2']['css'] = array(
+      $select2 . '/select2.css' => array(
+        'type' => 'file',
+        'media' => 'screen',
+      ),
+    );
+  }
+  else {
+    $libraries['formawesome.select2']['css'] = array(
+      $module . '/css/formawesome.select2.css' => array(
+        'type' => 'file',
+        'media' => 'screen',
+      ),
+    );
+  }
+  return $libraries;
+}
+
+/**
+ * Implements hook_library_alter().
+ */
+function formawesome_library_alter(&$libraries, $module) {
+  // Retrieve basic paths.
+  $module = drupal_get_path('module', 'formawesome');
+  $select2 = libraries_get_path('select2');
+  $libraries['drupal.autocomplete']['js'] = array(
+    $select2 . '/select2.min.js' => array(),
+    $module . '/js/formawesome.autocomplete.js' => array(),
+  );
+  global $theme;
+  if ($theme == 'seven') {
+    $libraries['drupal.autocomplete']['css'] = array(
+      $select2 . '/select2.css' => array(
+        'type' => 'file',
+        'media' => 'screen',
+      ),
+    );
+  }
+  else {
+    $libraries['drupal.autocomplete']['css'] = array(
+      $module . '/css/formawesome.select2.css' => array(
+        'type' => 'file',
+        'media' => 'screen',
+      ),
+    );
   }
 }
 
@@ -49,7 +136,7 @@ function formawesome_page_build() {
 function formawesome_module_implements_alter(&$info, $hook) {
   if ($hook == 'element_info_alter') {
     unset($info['formawesome']);
-    $info['formawesome'] = FALSE;
+    $info['formawesome'] = TRUE;
   }
 }
 
@@ -57,43 +144,96 @@ function formawesome_module_implements_alter(&$info, $hook) {
  * Implements hook_element_info_alter().
  */
 function formawesome_element_info_alter(&$info) {
-  $excluded = array('hidden', 'token', 'value');
+  $included = array('submit', 'button');
   foreach ($info as $id => $element) {
-    if (array_key_exists('#input', $element) && $element['#input'] && !in_array($id, $excluded)) {
-      $info[$id]['#theme_wrappers'][] = 'formawesome_element';
+    if (array_key_exists('#theme_wrappers', $element) && in_array('form_element', $element['#theme_wrappers']) || in_array($id, $included)) {
+      $info[$id]['#theme_wrappers'][array_search('form_element', $element['#theme_wrappers'])] = 'formawesome_element';
       if (!isset($info[$id]['#process']) || !is_array($info[$id]['#process'])) {
         $info[$id]['#process'] = array();
       }
       array_unshift($info[$id]['#process'], 'formawesome_form_element_process');
     }
+    if (in_array($id, array('radios', 'checkboxes', 'radio', 'checkbox'))) {
+      $info[$id]['#process'][] = 'formawesome_process_selectables';
+    }
   }
-  //array_unshift($info['file']['#theme_wrappers'], 'formawesome_enhance_file');
-  array_unshift($info['checkbox']['#theme_wrappers'], 'formawesome_enhance');
-  array_unshift($info['radio']['#theme_wrappers'], 'formawesome_enhance');
+}
+
+/**
+ * Recursively enhance all checkboxes and radio buttons.
+ */
+function formawesome_process_selectables(&$element, &$form_state, &$complete_form) {
+  if (in_array($element['#type'], array('checkboxes', 'radios'))) {
+    foreach (element_children($element) as $child) {
+      $element[$child]['#enhance'] = TRUE;
+    }
+  }
+  else {
+    $element['#enhance'] = TRUE;
+  }
+  return $element;
 }
 
 /**
  * Process form elements.
  */
 function formawesome_form_element_process(&$element, &$form_state, &$complete_form) {
-  if (isset($element['#title_display']) && $element['#title_display'] == 'placeholder') {
-    $element['#placeholder_label'] = TRUE;
-    $element['#title_display'] = 'before';
+  if (array_key_exists('#required_message', $element)) {
+    $element['required'] = FALSE;
+    if (!isset($element['#element_validate'])) {
+      $element['#element_validate'] = array();
+    }
+    array_unshift($element['#element_validate'], 'formawesome_required_message_validate');
+  }
+  $element['#attached']['library'][] = array('formawesome', 'formawesome.base');
+  if ($element['#type'] == 'select') {
+    $element['#attached']['library'][] = array('formawesome', 'formawesome.select2');
   }
   return $element;
 }
 
 /**
- * Wrap checkboxes and radio buttons to enable css styling.
+ * Check if the element value is empty and display the customized error message.
  */
-function theme_formawesome_enhance(&$variables) {
-  global $theme;
-  $element = $variables['element'];
-  if (theme_get_setting('formawesome_checkboxes', $theme)) {
-    return '<span class="formawesome-enhanced">' . $element['#children'] . '</span>';
+function formawesome_required_message_validate(&$element, &$form_state, &$complete_form) {
+  // Shamelessly stolen from includes/form.inc.
+  $is_empty_multiple = (!count($element['#value']));
+  $is_empty_string = (is_string($element['#value']) && drupal_strlen(trim($element['#value'])) == 0);
+  $is_empty_value = ($element['#value'] === 0);
+  if ($is_empty_multiple || $is_empty_string || $is_empty_value) {
+    form_error($element, $element['#required_message']);
   }
-  else {
-    return $element['#children'];
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function formawesome_form_alter(&$form, &$form_state) {
+  $form['#validate'][] = 'formawesome_post_validate';
+  $form['#attached']['library'][] = array('formawesome', 'formawesome.base');
+}
+
+/**
+ * Clear out form error messages and replace them with a global error message.
+ */
+function formawesome_post_validate(&$form, &$form_state) {
+  if ($errors = form_get_errors()) {
+    foreach (form_get_errors() as $message) {
+      if (isset($_SESSION['messages']['error'])) {
+        $index = array_search($message, $_SESSION['messages']['error']);
+        if ($index !== FALSE) {
+          unset($_SESSION['messages']['error'][$index]);
+        }
+      }
+    }
+    $global_message = t('The form contains errors. Please review them and submit again.');
+    if (array_key_exists('#global_error_message', $form)) {
+      $global_message = $form['#global_error_message'];
+    }
+    drupal_set_message($global_message, 'error');
+    foreach ($_SESSION['messages'] as $type => $messages) {
+      $_SESSION['messages'][$type] = array_values($messages);
+    }
   }
 }
 
@@ -101,74 +241,210 @@ function theme_formawesome_enhance(&$variables) {
  * Wrap form items in an additional wrapper and attach icons and error classes.
  */
 function theme_formawesome_element(&$variables) {
-  $element = $variables['element'];
-  global $theme;
-  $attributes = array();
-  $attributes['class'] = array_key_exists('#wrapper_class', $element) ? $element['#wrapper_class'] : array();
-  $attributes['class'][] = 'formawesome-wrapper';
-  $attributes['class'][] = 'formawesome-' . $element['#type'];
+  $includes = array('submit', 'button');
 
-  $content = $variables['element']['#children'];
-
-  if (!theme_get_setting('formawesome_checkboxes', $theme)) {
-    return $content;
+  $element = &$variables['element'];
+  if (in_array($element['#type'], $includes)) {
+    $element['#children'] = theme('button', $element);
   }
 
-  // Attach an icon if required.
-  $icon = isset($element['#icon']) ? $element['#icon'] : FALSE;
-  $iconpos = isset($element['#icon_position']) ? $element['#icon_position'] : 'before';
-  if ($icon) {
-    $attributes['class'][] = 'formawesome-icon';
-    $attributes['class'][] = 'formawesome-icon-position-' . $iconpos;
-    if ($iconpos == 'before') {
-      $content = '<i class="icon-' . $icon . '"></i>' . $content;
-    }
-    else {
-      $content .= '<i class="icon-' . $icon . '"></i>';
-    }
-  }
+  // This function is invoked as theme wrapper, but the rendered form element
+  // may not necessarily have been processed by form_builder().
+  $element += array(
+    '#title_display' => 'before',
+  );
 
-  // Check if there are errors and add a class to the wrapper div.
-  /*
-  if ($error = form_get_error($element)) {
-    $attributes['class'][] = 'formawesome-error';
+  // Add element #id for #type 'item'.
+  if (isset($element['#markup']) && !empty($element['#id'])) {
+    $attributes['id'] = $element['#id'];
   }
-  */
+  // Add element's #type and #name as class to aid with JS/CSS selectors.
+  $attributes['class'] = array('form-item', 'formawesome-wrapper');
 
-  // Placeholder label.
-  if (isset($element['#placeholder_label']) && $element['#placeholder_label']) {
+  // Search for #title_display == 'placeholder' and set appropriate class.
+  if ($element['#title_display'] == 'placeholder') {
+    $element['#title_display'] = 'before';
     $attributes['class'][] = 'formawesome-placeholder-label';
   }
 
-  return '<div ' . drupal_attributes($attributes) . '>' . $content . '</div>';
+  if (array_key_exists('#wrapper_classes', $element)) {
+    if (!is_array($element['#wrapper_classes'])) {
+      $attributes['class'][] = $element['#wrapper_classes'];
+    }
+    else {
+      foreach ($element['#wrapper_classes'] as $class) {
+        $attributes['class'][] = $class;
+      }
+    }
+  }
+
+  if (!empty($element['#type'])) {
+    $attributes['class'][] = 'form-type-' . strtr($element['#type'], '_', '-');
+  }
+
+  if (!empty($element['#name'])) {
+    $attributes['class'][] = 'form-item-' . strtr($element['#name'], array(' ' => '-', '_' => '-', '[' => '-', ']' => ''));
+  }
+
+  // Add a class for disabled elements to facilitate cross-browser styling.
+  if (!empty($element['#attributes']['disabled'])) {
+    $attributes['class'][] = 'form-disabled';
+  }
+
+  // If #title is not set, we don't display any label or required marker.
+  if (!isset($element['#title'])) {
+    $element['#title_display'] = 'none';
+  }
+
+  $prefix = isset($element['#field_prefix']) ? '<span class="field-prefix">' . $element['#field_prefix'] . '</span> ' : '';
+  $suffix = isset($element['#field_suffix']) ? ' <span class="field-suffix">' . $element['#field_suffix'] . '</span>' : '';
+
+  // Handle icons before or after the element.
+  if (isset($element['#icon_before'])) {
+    $prefix .= '<span class="formawesome-icon formawesome-icon-before icon-' . $element['#icon_before'] . '"></span>';
+    $attributes['class'][] = 'formawesome-icon-before';
+  }
+
+  if (isset($element['#icon_after'])) {
+    $suffix = '<span class="formawesome-icon icon-' . $element['#icon_after'] . '"></span>' . $suffix;
+    $attributes['class'][] = 'formawesome-icon-after';
+  }
+
+  if (in_array($element['#type'], array('checkbox', 'radio')) && isset($element['#enhance']) && $element['#enhance']) {
+    $prefix .= '<span class="formawesome-indicator">';
+    $suffix = '</span>' . $suffix;
+    $attributes['class'][] = 'formawesome-enhanced';
+  }
+
+  $error = form_get_error($element);
+
+  // Attach the error class to the form-item wrapper element.
+  if ($error) {
+    $attributes['class'][] = 'form-error';
+  }
+
+  $output = '<div' . drupal_attributes($attributes) . '>' . "\n";
+  if ($error) {
+    $output .= '<div class="form-error-message">' . $error . '</div>';
+  }
+
+  $theme_variables = $variables;
+  if (array_key_exists('#required_message', $theme_variables['element'])) {
+    $theme_variables['#required'] = TRUE;
+  }
+  switch ($element['#title_display']) {
+    case 'before':
+    case 'invisible':
+      $output .= ' ' . theme('form_element_label', $theme_variables);
+      $output .= ' ' . $prefix . $element['#children'] . $suffix . "\n";
+      break;
+
+    case 'after':
+      $output .= ' ' . $prefix . $element['#children'] . $suffix;
+      $output .= ' ' . theme('form_element_label', $theme_variables) . "\n";
+      break;
+
+    case 'none':
+    case 'attribute':
+      // Output no label and no required marker, only the children.
+      $output .= ' ' . $prefix . $element['#children'] . $suffix . "\n";
+      break;
+  }
+
+  if (!empty($element['#description'])) {
+    $output .= '<div class="description">' . $element['#description'] . "</div>\n";
+  }
+
+  $output .= "</div>\n";
+
+  return $output;
 }
 
+// ======================================================================
+// TEST MENU CALLBACK
+// ======================================================================
 /**
- * Implements hook_form_system_theme_settings_alter().
+ * Formawesome tests menu callback.
  */
-function formawesome_form_system_theme_settings_alter(&$form, &$form_state) {
-  $theme = count($form_state['build_info']['args']) > 0 ? $form_state['build_info']['args'][0] : FALSE;
-  $form['formawesome'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('FormAwesome'),
-    '#description' => t('Configure form enhancements for this theme.'),
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
-    'formawesome_select' => array(
-      '#type' => 'select',
-      '#title' => t('Selectboxes'),
-      '#options' => array(
-        'none' => t('None'),
-        'default' => t('Default'),
-        'naked' => t('Naked'),
-      ),
-      '#default_value' => theme_get_setting('formawesome_select', $theme),
-    ),
-    'formawesome_checkboxes' => array(
-      '#type' => 'checkbox',
-      '#title' => t('Checkboxes / Radio buttons'),
-      '#description' => t('Make checkboxes and radio buttons css styleable.'),
-      '#default_value' => theme_get_setting('formawesome_checkboxes', $theme),
+function formawesome_menu() {
+  $items = array();
+  $items['formawesome'] = array(
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('formawesome_test_form'),
+    'access callback' => TRUE,
+  );
+  return $items;
+}
+
+function formawesome_test_form($form, &$form_state) {
+  $form['user'] = array(
+    '#type' => 'textfield',
+    '#title' => 'user',
+    '#autocomplete_path' => 'user/autocomplete',
+  );
+  $form['checkboxes'] = array(
+    '#type' => 'checkboxes',
+    '#title' => 'Checkboxes',
+    '#options' => array(
+      '1' => 'Test 1',
+      '2' => 'Test 2',
+      '3' => 'Test 3',
     ),
   );
+  $form['radios'] = array(
+    '#type' => 'radios',
+    '#title' => 'Radios',
+    '#options' => array(
+      '1' => 'Test 1',
+      '2' => 'Test 2',
+      '3' => 'Test 3',
+    ),
+  );
+  $form['file'] = array(
+    '#title' => 'File test',
+    '#type' => 'managed_file',
+  );
+  $form['textfield'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Huhu!',
+    '#title_display' => 'placeholder',
+  );
+  $form['single_checkbox'] = array(
+    '#type' => 'checkbox',
+    '#title' => 'Blabla',
+    '#enhance' => TRUE,
+    '#field_prefix' => 'hui',
+    '#field_suffix' => 'mui',
+  );
+  $form['select'] = array(
+    '#type' => 'select',
+    '#title' => 'Single select',
+    '#options' => array(
+      'bla',
+      'mu',
+      'mi',
+    ),
+  );
+  $form['multiple'] = array(
+    '#type' => 'select',
+    '#title' => 'Single select',
+    '#options' => array(
+      'bla',
+      'mu',
+      'mi',
+    ),
+    '#multiple' => TRUE,
+  );
+  $form['button'] = array(
+    '#type' => 'button',
+    '#value' => 'Button',
+    '#icon_after' => array('facebook'),
+  );
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => 'Submit',
+    '#icon_before' => array('twitter'),
+    '#icon_after' => array('facebook'),
+  );
+  return $form;
 }

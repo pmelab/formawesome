@@ -36,17 +36,20 @@
         }
 
         /**
-         * Remove focused status on $wrapper.
+         * Remove focused status from $wrapper.
          */
         function blur() {
           $wrapper.removeClass('formawesome-focused');
         }
 
+        /**
+         * Get change events and set filled-status on $wrapper.
+         */
         function change() {
           if (type === 'radio' || type == 'checkbox') {
             if ($input.is(':checked')) {
               if (type === 'radio') {
-                $input.parents('.formawesome-radios').find('.formawesome-radio').removeClass('formawesome-filled');
+                $input.parents('.form-type-radios').find('.form-type-radio').removeClass('formawesome-filled');
               }
               $wrapper.addClass('formawesome-filled');
             }
@@ -64,9 +67,11 @@
           }
         }
 
+        // Bind focus, blur and change functions to appropriate events on
+        // the input element.
         $input.focusin(focus);
         $input.focusout(blur);
-        $input.hover(focus, blur);
+        $wrapper.hover(focus, blur);
         $input.change(change);
         $input.keyup(change);
         change();
