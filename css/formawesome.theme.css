@@ -1,0 +1,79 @@
+.form-item {
+  position: relative;
+}
+
+/* ====================================================================== */
+/* Inline error messages.                                           */
+/* ====================================================================== */
+.form-error-message {
+  background: #fef5f1;
+  color: #8c2e0b;
+  border: 1px solid #ed541d;
+  bottom: 100%;
+  margin-bottom: -0.5em;
+  padding: 0.5em;
+}
+
+/* ====================================================================== */
+/* styleable checkboxes and radio buttons                                 */
+/* ====================================================================== */
+.form-type-radio label, .form-type-checkbox label {
+  margin-bottom: 0;
+}
+
+.form-selectable {
+  vertical-align: middle;
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  background: #CCC;
+  line-height: 1em;
+  text-align: center;
+  position: relative;
+}
+
+.form-selectable:before {
+  text-align: center;
+  display: none;
+}
+
+.form-filled .form-selectable:before {
+  display: block;
+}
+
+.form-type-checkbox .form-selectable:before {
+  content: '\2716';
+}
+
+.form-type-radio .form-selectable:before {
+  content: '\25CF';
+}
+
+/**
+ * Radios are rounded. Yay!
+ */
+.form-type-radio .form-selectable {
+  -webkit-border-radius: 1em;
+  -moz-border-radius: 1em;
+  -o-border-radius: 1em;
+  -ms-border-radius: 1em;
+  border-radius: 1em;
+}
+
+/**
+ * Stretch the actual input element to the full size of the indicator and
+ * hide it with opacity 0.
+ */
+.form-selectable input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
+  filter: alpha(opacity=0);
+  -moz-opacity: 0.0;
+  -khtml-opacity: 0.0;
+  z-index: 5;
+  opacity: 0.0;
+}
