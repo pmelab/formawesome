@@ -1,150 +1,12 @@
 /* Wrappers around buttons should still be inline. */
-.formawesome-wrapper.form-type-submit,
-.formawesome-wrapper.form-type-button {
+.form-item.form-type-submit,
+.form-item.form-type-button {
   display: inline;
 }
 
+/* Min width for Select2 containers, or else they dissappear without content. */
 .select2-container {
-  min-width: 180px;
-}
-
-.formawesome-wrapper {
-  position: relative
-}
-
-.formawesome-icon i {
-  position: absolute
-}
-
-/* ====================================================================== */
-/* Inline error message popups.                                           */
-/* ====================================================================== */
-
-.formawesome-wrapper .form-error-message {
-  -webkit-box-sizing: border-box; /* Android ≤ 2.3, iOS ≤ 4 */
-  -moz-box-sizing: border-box; /* Firefox 1+ */
-  box-sizing: border-box; /* Chrome, IE 8+, Opera, Safari 5.1 */
-  background: #fef5f1;
-  color: #8c2e0b;
-  border: 1px solid #ed541d;
-  position: absolute;
-  bottom: 100%;
-  margin-bottom: -0.5em;
-  width: 100%;
-  padding: 0.5em;
-  display: none;
-}
-
-.formawesome-wrapper .form-error-message:after {
-  content: '';
-  display: block;
-  width: 0;
-  height: 0;
-  border: 10px solid transparent;
-  border-top-color: #ed541d;
-  position: absolute;
-  bottom: -20px;
-  left: 50%;
-  margin-left: -5px;
-  -webkit-transform:rotate(360deg);
-}
-
-.formawesome-focused .form-error-message {
-  display: block;
-}
-
-
-/* ====================================================================== */
-/* Twitter style placeholder labels.                                      */
-/* ====================================================================== */
-.formawesome-placeholder-label label {
-  position: absolute;
-  -webkit-transition: all 0.3s ease;
-  -moz-transition: all 0.3s ease;
-  -o-transition: all 0.3s ease;
-  transition: all 0.3s ease-out;
-  pointer-events: none;
-}
-
-.formawesome-focused.formawesome-placeholder-label label {
-  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=60)";
-  filter: alpha(opacity=60);
-  -moz-opacity: 0.6;
-  -khtml-opacity: 0.6;
-  opacity: 0.6;
-}
-
-.formawesome-filled.formawesome-placeholder-label label {
-  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
-  filter: alpha(opacity=0);
-  -moz-opacity: 0.0;
-  -khtml-opacity: 0.0;
-  opacity: 0.0;
-  pointer-events: none
-}
-
-/* ====================================================================== */
-/* styleable checkboxes and radio buttons                                 */
-/* ====================================================================== */
-.form-type-radio label, .form-type-checkbox label {
-  margin-bottom: 0;
-}
-
-.formawesome-indicator {
-  vertical-align: middle;
-  display: inline-block;
-  width: 1em;
-  height: 1em;
-  background: #CCC;
-  line-height: 1em;
-  text-align: center;
-  position: relative;
-}
-
-.formawesome-indicator:before {
-  text-align: center;
-  display: none;
-}
-
-.formawesome-filled .formawesome-indicator:before {
-  display: block;
-}
-
-.form-type-checkbox .formawesome-indicator:before {
-  content: '\2716';
-}
-
-.form-type-radio .formawesome-indicator:before {
-  content: '\25CF';
-}
-
-/**
- * Radios are rounded. Yay!
- */
-.form-type-radio .formawesome-indicator {
-  -webkit-border-radius: 1em;
-  -moz-border-radius: 1em;
-  -o-border-radius: 1em;
-  -ms-border-radius: 1em;
-  border-radius: 1em;
-}
-
-/**
- * Stretch the actual input element to the full size of the indicator and
- * hide it with opacity 0.
- */
-.formawesome-indicator input {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
-  filter: alpha(opacity=0);
-  -moz-opacity: 0.0;
-  -khtml-opacity: 0.0;
-  z-index: 5;
-  opacity: 0.0;
+  min-width: 12em;
 }
 
 /**
@@ -152,16 +14,10 @@
  * widths.
  */
 .container-inline div, .container-inline label {
+  display: -moz-inline-stack;
   display: inline-block;
-}
-
-div.form-item .select2-offscreen {
-  border: 0;
-  clip: rect(0 0 0 0);
-  height: 1px;
-  margin: -1px;
-  overflow: hidden;
-  padding: 0;
-  position: absolute;
-  width: 1px;
+  vertical-align: middle;
+  *vertical-align: auto;
+  zoom: 1;
+  *display: inline;
 }

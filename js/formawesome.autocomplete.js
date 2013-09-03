@@ -2,6 +2,7 @@
  * @file
  * Replace drupal autocomplete behavior with jQuery select2.
  */
+
 (function(Drupal, $){
   /**
    * Attaches the autocomplete behavior to all required fields.
@@ -14,10 +15,13 @@
         var $input = $(this).parent().find('.form-autocomplete');
         var max_values = parseInt($input.attr('data-max-values')) || 1;
         var allow_unknown = $input.attr('data-allow-unknown') === 'true';
+        var $label = $(this).parent().find('label');
+        $label.css('display', 'none');
 
         var options = {};
         // TODO: Fix with base stylesheet for seven.
         options.width = '100%';
+        options.placeholder = $label.text();
 
         // Set the max value and multiple values accordingly.
         if (max_values !== 1) {
