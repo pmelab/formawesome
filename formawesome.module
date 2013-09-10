@@ -259,7 +259,7 @@ function theme_formawesome_element(&$variables) {
     }
   }
 
-  if (isset($element['#autocomplete_path'])) {
+  if (isset($element['#autocomplete_path']) && $element['#autocomplete_path']) {
     $attributes['class'][] = 'form-type-autocomplete';
   }
 
