@@ -106,11 +106,13 @@ function formawesome_library() {
  */
 function formawesome_library_alter(&$libraries, $module) {
   // Retrieve basic paths.
-  $module = drupal_get_path('module', 'formawesome');
-  $libraries['drupal.autocomplete']['dependencies'][] = array('formawesome', 'formawesome.select2');
-  $libraries['drupal.autocomplete']['js'] = array(
-    $module . '/js/formawesome.autocomplete.js' => array(),
-  );
+  if ($module == 'system') {
+    $path = drupal_get_path('module', 'formawesome');
+    $libraries['drupal.autocomplete']['dependencies'][] = array('formawesome', 'formawesome.select2');
+    $libraries['drupal.autocomplete']['js'] = array(
+      $path . '/js/formawesome.autocomplete.js' => array('group' => JS_DEFAULT),
+    );
+  }
 }
 
 /**
@@ -119,7 +121,8 @@ function formawesome_library_alter(&$libraries, $module) {
  * Make sure that formawesome_element_info_alter() is executed at last.
  */
 function formawesome_module_implements_alter(&$info, $hook) {
-  if ($hook == 'element_info_alter') {
+  $hooks = array('element_info_alter', 'library_alter');
+  if (in_array($hook, $hooks)) {
     unset($info['formawesome']);
     $info['formawesome'] = TRUE;
   }
