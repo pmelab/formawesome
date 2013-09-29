@@ -5,9 +5,20 @@
  */
 
 /**
+ * Check if a specific feature is enabled for the current theme.
+ */
+function formawesome_feature_enabled($feature) {
+  global $theme;
+  return $theme != 'seven';
+}
+
+/**
  * Implements hook_field_widget_form_alter().
  */
 function formawesome_field_widget_form_alter(&$element, &$form_state, $context) {
+  if (!formawesome_feature_enabled('formawesome_autocomplete')) {
+    return;
+  }
   // Autocomplete field widgets that support multiple entries.
   $formawesome_autocomplete_multiple = array(
     'taxonomy_autocomplete',
@@ -105,6 +116,9 @@ function formawesome_library() {
  * Implements hook_library_alter().
  */
 function formawesome_library_alter(&$libraries, $module) {
+  if (!formawesome_feature_enabled('formawesome_autocomplete')) {
+    return;
+  }
   // Retrieve basic paths.
   if ($module == 'system') {
     $path = drupal_get_path('module', 'formawesome');
@@ -133,6 +147,9 @@ function formawesome_module_implements_alter(&$info, $hook) {
  */
 function formawesome_element_info_alter(&$info) {
   $included = array('submit', 'button');
+  if (!formawesome_feature_enabled('formawesome_wrap_buttons')) {
+    $included = array();
+  }
   foreach ($info as $id => $element) {
     if (array_key_exists('#theme_wrappers', $element) && in_array('form_element', $element['#theme_wrappers']) || in_array($id, $included)) {
       $info[$id]['#theme_wrappers'][array_search('form_element', $element['#theme_wrappers'])] = 'formawesome_element';
@@ -155,9 +172,11 @@ function formawesome_form_element_process(&$element, &$form_state, &$complete_fo
     }
     array_unshift($element['#element_validate'], 'formawesome_required_message_validate');
   }
-  $element['#attached']['library'][] = array('formawesome', 'formawesome.base');
-  if ($element['#type'] == 'select') {
-    $element['#attached']['library'][] = array('formawesome', 'formawesome.select2');
+  if (formawesome_feature_enabled('formawesome_enhance_elements')) {
+    $element['#attached']['library'][] = array('formawesome', 'formawesome.base');
+    if ($element['#type'] == 'select') {
+      $element['#attached']['library'][] = array('formawesome', 'formawesome.select2');
+    }
   }
   return $element;
 }
@@ -179,8 +198,10 @@ function formawesome_required_message_validate(&$element, &$form_state, &$comple
  * Implements hook_form_alter().
  */
 function formawesome_form_alter(&$form, &$form_state) {
-  $form['#validate'][] = 'formawesome_post_validate';
-  $form['#attached']['library'][] = array('formawesome', 'formawesome.base');
+  if (formawesome_feature_enabled('formawesome_inline_errors')) {
+    $form['#validate'][] = 'formawesome_post_validate';
+    $form['#attached']['library'][] = array('formawesome', 'formawesome.base');
+  }
 }
 
 /**
@@ -306,21 +327,27 @@ function theme_formawesome_element(&$variables) {
 
   // Wrap selectable elements (radios and checkboxes) in a selectable wrapper
   // to enable CSS styling of these elements.
-  if (in_array($element['#type'], array('checkbox', 'radio'))) {
-    $prefix .= '<span class="form-selectable">';
-    $suffix = '</span>' . $suffix;
-  }
 
-  $error = form_get_error($element);
-
-  // Attach the error class to the form-item wrapper element.
-  if ($error) {
-    $attributes['class'][] = 'form-error';
+  if (formawesome_feature_enabled('formawesome_enhance_elements')) {
+    if (in_array($element['#type'], array('checkbox', 'radio'))) {
+      $prefix .= '<span class="form-selectable">';
+      $suffix = '</span>' . $suffix;
+    }
   }
 
   $output = '<div' . drupal_attributes($attributes) . '>' . "\n";
-  if ($error) {
-    $output .= '<div class="form-error-message">' . $error . '</div>';
+
+  if (formawesome_feature_enabled('formawesome_inline_errors') && array_key_exists('#parents', $element)) {
+    $error = form_get_error($element);
+
+    // Attach the error class to the form-item wrapper element.
+    if ($error) {
+      $attributes['class'][] = 'form-error';
+    }
+
+    if ($error) {
+      $output .= '<div class="form-error-message">' . $error . '</div>';
+    }
   }
 
   $theme_variables = $variables;
