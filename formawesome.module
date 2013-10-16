@@ -198,7 +198,7 @@ function formawesome_required_message_validate(&$element, &$form_state, &$comple
  * Implements hook_form_alter().
  */
 function formawesome_form_alter(&$form, &$form_state) {
-  if (formawesome_feature_enabled('formawesome_inline_errors')) {
+  if (FALSE && formawesome_feature_enabled('formawesome_inline_errors')) {
     $form['#validate'][] = 'formawesome_post_validate';
     $form['#attached']['library'][] = array('formawesome', 'formawesome.base');
   }
