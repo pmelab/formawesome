@@ -37,7 +37,7 @@
           if (type === 'radio' || type == 'checkbox') {
             if ($input.is(':checked')) {
               if (type === 'radio') {
-                $input.parents('.form-type-radios').find('.form-type-radio').removeClass('form-filled');
+                $input.parents('form').find('input[name="' + $input.attr('name') + '"]').parents('.form-item').removeClass('form-filled');
               }
               $wrapper.addClass('form-filled');
             }
