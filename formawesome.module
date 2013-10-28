@@ -177,6 +177,9 @@ function formawesome_form_element_process(&$element, &$form_state, &$complete_fo
     if ($element['#type'] == 'select') {
       $element['#attached']['library'][] = array('formawesome', 'formawesome.select2');
     }
+    if ($element['#type'] == 'file') {
+      $element['#attached']['js'][] = drupal_get_path('module', 'formawesome') . '/js/formawesome.file.js';
+    }
   }
   return $element;
 }
