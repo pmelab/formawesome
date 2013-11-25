@@ -16,6 +16,7 @@
         var max_values = parseInt($input.attr('data-max-values')) || 1;
         var allow_unknown = $input.attr('data-allow-unknown') === 'true';
         var $label = $(this).parent().find('label');
+        var last_input = false;
         $label.css('display', 'none');
 
         var options = {};
@@ -54,6 +55,11 @@
           callback(data);
         };
 
+        // Prefill with last search.
+        options.onDropDownOpen = function(event) {
+          console.log(event);
+        };
+
         var timeout = false;
         options.query = function(query) {
           if (timeout) { window.clearTimeout(timeout); }
@@ -78,6 +84,21 @@
           }, 500);
         };
         $input.select2(options);
+
+        $input.on('select2-selecting', function() {
+          $('.select2-drop .select2-search input[type="text"]').each(function(){
+            last_input = $(this).val() || last_input;
+          });
+        });
+
+        $input.on('select2-open', function(){
+          if (last_input) {
+            $('.select2-drop .select2-search input[type="text"]').val(last_input);
+            window.setTimeout(function(){
+              $('.select2-drop .select2-search input[type="text"]').trigger('keyup');
+            }, 200);
+          }
+        });
       });
     }
   };
