@@ -55,13 +55,11 @@
           callback(data);
         };
 
-        // Prefill with last search.
-        options.onDropDownOpen = function(event) {
-          console.log(event);
-        };
-
         var timeout = false;
         options.query = function(query) {
+          if (query.term == '' && last_input) {
+            query.term = last_input;
+          }
           if (timeout) { window.clearTimeout(timeout); }
           timeout = window.setTimeout(function(){
             $.ajax({
@@ -94,9 +92,6 @@
         $input.on('select2-open', function(){
           if (last_input) {
             $('.select2-drop .select2-search input[type="text"]').val(last_input);
-            window.setTimeout(function(){
-              $('.select2-drop .select2-search input[type="text"]').trigger('keyup');
-            }, 200);
           }
         });
       });
