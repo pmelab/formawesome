@@ -21,7 +21,7 @@
           placeholder: $label.text(),
           adaptContainerCssClass: function (c) { return null; },
           adaptDropdownCssClass: function (c) { return null; },
-          minimumResultsForSearch: 8
+          minimumResultsForSearch: -1
         };
         if ($(this).data('theme') && Drupal.formawesome.theme[$(this).data('theme')]) {
           var theme = Drupal.formawesome.theme[$(this).data('theme')];
