@@ -8,15 +8,60 @@
  * Check if a specific feature is enabled for the current theme.
  */
 function formawesome_feature_enabled($feature) {
-  global $theme;
-  return $theme != 'seven';
+  return theme_get_setting('formawesome_' . $feature) == 1;
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function formawesome_form_system_theme_settings_alter(&$form, &$form_state) {
+  $theme = FALSE;
+  if (preg_match('/^theme_(.+)_settings$/', $form['var']['#value'], $matches)) {
+    $theme = $matches[1];
+  }
+
+  $features = array(
+    'autocomplete' => array(
+      'title' => t('Autocomplete input fields'),
+      'description' => t('Enhance autocomplete input fields with jQuery Select2.'),
+    ),
+    'wrap_buttons' => array(
+      'title' => t('Wrap buttons'),
+      'description' => t('Wrap buttons in form item elements.'),
+    ),
+    'inline_errors' => array(
+      'title' => t('Inline errors'),
+      'description' => t('Display form errors inline.'),
+    ),
+    'enhance_selectables' => array(
+      'title' => t('Enhance selectables'),
+      'description' => t('Wrap checkboxes and radio buttons to be easier styleable.'),
+    ),
+  );
+
+  $form['formawesome'] = array(
+    '#type' => 'fieldset',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#title' => 'Formawesome',
+    '#description' => t('Toggle form enhancements for this theme.'),
+  );
+  foreach ($features as $key => $feature) {
+    $setting = 'formawesome_' . $key;
+    $form['formawesome'][$setting] = array(
+      '#type' => 'checkbox',
+      '#title' => $feature['title'],
+      '#description' => $feature['description'],
+      '#default_value' => theme_get_setting($setting, $theme),
+    );
+  }
 }
 
 /**
  * Implements hook_field_widget_form_alter().
  */
 function formawesome_field_widget_form_alter(&$element, &$form_state, $context) {
-  if (!formawesome_feature_enabled('formawesome_autocomplete')) {
+  if (!formawesome_feature_enabled('autocomplete')) {
     return;
   }
   // Autocomplete field widgets that support multiple entries.
@@ -99,16 +144,6 @@ function formawesome_library() {
       array('formawesome', 'formawesome.base'),
     ),
   );
-
-  global $theme;
-  if (in_array($theme, array('seven', 'stark'))) {
-    $libraries['formawesome.select2']['css'] = array(
-      $select2 . '/select2.css' => array(
-        'type' => 'file',
-        'media' => 'screen',
-      ),
-    );
-  }
   return $libraries;
 }
 
@@ -116,7 +151,7 @@ function formawesome_library() {
  * Implements hook_library_alter().
  */
 function formawesome_library_alter(&$libraries, $module) {
-  if (!formawesome_feature_enabled('formawesome_autocomplete')) {
+  if (!formawesome_feature_enabled('autocomplete')) {
     return;
   }
   // Retrieve basic paths.
@@ -146,10 +181,7 @@ function formawesome_module_implements_alter(&$info, $hook) {
  * Implements hook_element_info_alter().
  */
 function formawesome_element_info_alter(&$info) {
-  $included = array('submit', 'button');
-  if (!formawesome_feature_enabled('formawesome_wrap_buttons')) {
-    $included = array();
-  }
+  $included = formawesome_feature_enabled('wrap_buttons') ? array('submit', 'button') : array();
   foreach ($info as $id => $element) {
     if (array_key_exists('#theme_wrappers', $element) && in_array('form_element', $element['#theme_wrappers']) || in_array($id, $included)) {
       $info[$id]['#theme_wrappers'][array_search('form_element', $element['#theme_wrappers'])] = 'formawesome_element';
@@ -172,15 +204,21 @@ function formawesome_form_element_process(&$element, &$form_state, &$complete_fo
     }
     array_unshift($element['#element_validate'], 'formawesome_required_message_validate');
   }
-  if (formawesome_feature_enabled('formawesome_enhance_elements')) {
-    $element['#attached']['library'][] = array('formawesome', 'formawesome.base');
-    if ($element['#type'] == 'select') {
-      $element['#attached']['library'][] = array('formawesome', 'formawesome.select2');
-    }
-    if ($element['#type'] == 'file') {
-      $element['#attached']['js'][] = drupal_get_path('module', 'formawesome') . '/js/formawesome.file.js';
-    }
+
+  if (!array_key_exists('#enhance', $element)) {
+    $element['#enhance'] = FALSE;
   }
+
+  if ($element['#type'] == 'select' && $element['#enhance']) {
+    $element['#attached']['library'][] = array('formawesome', 'formawesome.select2');
+    $element['#attached']['library'][] = array('formawesome', 'formawesome.base');
+  }
+
+  if ($element['#type'] == 'file' && $element['#enhance']) {
+    $element['#attached']['js'][] = drupal_get_path('module', 'formawesome') . '/js/formawesome.file.js';
+    $element['#attached']['library'][] = array('formawesome', 'formawesome.base');
+  }
+
   return $element;
 }
 
@@ -201,7 +239,7 @@ function formawesome_required_message_validate(&$element, &$form_state, &$comple
  * Implements hook_form_alter().
  */
 function formawesome_form_alter(&$form, &$form_state) {
-  if (FALSE && formawesome_feature_enabled('formawesome_inline_errors')) {
+  if (formawesome_feature_enabled('inline_errors')) {
     $form['#validate'][] = 'formawesome_post_validate';
     $form['#attached']['library'][] = array('formawesome', 'formawesome.base');
   }
@@ -249,8 +287,9 @@ function formawesome_theme() {
  */
 function theme_formawesome_element(&$variables) {
   $includes = array('submit', 'button');
-
   $element = &$variables['element'];
+
+  // If we get a button or submit button, wrap them too.
   if (in_array($element['#type'], $includes)) {
     $element['#children'] = theme('button', $element);
   }
@@ -265,14 +304,9 @@ function theme_formawesome_element(&$variables) {
   if (isset($element['#markup']) && !empty($element['#id'])) {
     $attributes['id'] = $element['#id'];
   }
+
   // Add element's #type and #name as class to aid with JS/CSS selectors.
   $attributes['class'] = array('form-item');
-
-  // Search for #title_display == 'placeholder' and set appropriate class.
-  if ($element['#title_display'] == 'placeholder') {
-    $element['#title_display'] = 'before';
-    $attributes['class'][] = 'formawesome-placeholder-label';
-  }
 
   // Apply wrapper classes.
   if (array_key_exists('#wrapper_classes', $element)) {
@@ -331,32 +365,25 @@ function theme_formawesome_element(&$variables) {
   // Wrap selectable elements (radios and checkboxes) in a selectable wrapper
   // to enable CSS styling of these elements.
 
-  if (formawesome_feature_enabled('formawesome_enhance_elements')) {
+  if (formawesome_feature_enabled('enhance_selectables')) {
     if (in_array($element['#type'], array('checkbox', 'radio'))) {
       $prefix .= '<span class="form-selectable">';
       $suffix = '</span>' . $suffix;
     }
   }
 
-  $output = '<div' . drupal_attributes($attributes) . '>' . "\n";
-
-  if (formawesome_feature_enabled('formawesome_inline_errors') && array_key_exists('#parents', $element)) {
-    $error = form_get_error($element);
-
-    // Attach the error class to the form-item wrapper element.
-    if ($error) {
-      $attributes['class'][] = 'form-error';
-    }
-
-    if ($error) {
-      $output .= '<div class="form-error-message">' . $error . '</div>';
-    }
+  $error = form_get_error($element);
+  if ($error) {
+    $attributes['class'][] = 'form-error';
   }
+
+  $output = '<div' . drupal_attributes($attributes) . '>' . "\n";
 
   $theme_variables = $variables;
   if (array_key_exists('#required_message', $theme_variables['element'])) {
     $theme_variables['#required'] = TRUE;
   }
+
   switch ($element['#title_display']) {
     case 'before':
     case 'invisible':
@@ -378,6 +405,12 @@ function theme_formawesome_element(&$variables) {
 
   if (!empty($element['#description'])) {
     $output .= '<div class="description">' . $element['#description'] . "</div>\n";
+  }
+
+  if (formawesome_feature_enabled('inline_errors') && array_key_exists('#parents', $element)) {
+    if ($error) {
+      $output .= '<div class="form-error-message">' . $error . '</div>';
+    }
   }
 
   $output .= "</div>\n";

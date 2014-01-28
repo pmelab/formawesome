@@ -14,7 +14,7 @@
    */
   Drupal.behaviors.formawesome_select2 = {
     attach: function (context, settings) {
-      $('select', context).once(function() {
+      $('select.enhanced', context).once(function() {
         var $label = $(this).parent().find('label');
         $label.css('display', 'none');
         var options = {
