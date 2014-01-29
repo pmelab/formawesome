@@ -41,6 +41,14 @@ function formawesome_form_system_theme_settings_alter(&$form, &$form_state) {
       'title' => t('Enhance selectables'),
       'description' => t('Wrap checkboxes and radio buttons to be easier styleable.'),
     ),
+    'enhance_selectboxes' => array(
+      'title' => t('Enhance select boxes'),
+      'description' => t('Use jQuery Select2 for all select boxes.'),
+    ),
+    'enhance_filefields' => array(
+      'title' => t('Enhance file fields'),
+      'description' => t('CSS styleable file fields.'),
+    ),
   );
 
   $form['formawesome'] = array(
@@ -50,6 +58,7 @@ function formawesome_form_system_theme_settings_alter(&$form, &$form_state) {
     '#title' => 'Formawesome',
     '#description' => t('Toggle form enhancements for this theme.'),
   );
+
   foreach ($features as $key => $feature) {
     $setting = 'formawesome_' . $key;
     $form['formawesome'][$setting] = array(
@@ -84,6 +93,7 @@ function formawesome_field_widget_form_alter(&$element, &$form_state, $context) 
   if (in_array($widget_type, $formawesome_autocomplete_multiple)) {
     $element['#attributes']['data-max-values'] = $context['field']['cardinality'];
   }
+
   if (in_array($context['instance']['widget']['type'], $formawesome_autocomplete_unknown)) {
     $element['#attributes']['data-allow-unknown'] = 'true';
   }
@@ -131,6 +141,9 @@ function formawesome_library() {
     'js' => array(
       $select2 . '/select2.js' => array(),
       $module . '/js/formawesome.select2.js' => array(),
+    ),
+    'css' => array(
+      $select2 . '/select2.css',
     ),
     'dependencies' => array(
       array('formawesome', 'formawesome.base'),
@@ -213,14 +226,16 @@ function formawesome_form_element_process(&$element, &$form_state, &$complete_fo
     $element['#enhance'] = FALSE;
   }
 
-  if ($element['#type'] == 'select' && $element['#enhance']) {
+  if ($element['#type'] == 'select' && ($element['#enhance'] || formawesome_feature_enabled('enhance_selectboxes'))) {
     $element['#attached']['library'][] = array('formawesome', 'formawesome.select2');
     $element['#attached']['library'][] = array('formawesome', 'formawesome.base');
+    $element['#attributes']['class'][] = 'formawesome-enhanced';
   }
 
-  if ($element['#type'] == 'file' && $element['#enhance']) {
+  if ($element['#type'] == 'file' && ($element['#enhance'] || formawesome_feature_enabled('enhance_filefields'))) {
     $element['#attached']['js'][] = drupal_get_path('module', 'formawesome') . '/js/formawesome.file.js';
     $element['#attached']['library'][] = array('formawesome', 'formawesome.base');
+    $element['#attributes']['class'][] = 'formawesome-enhanced';
   }
 
   return $element;

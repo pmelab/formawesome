@@ -14,14 +14,14 @@
    */
   Drupal.behaviors.formawesome_select2 = {
     attach: function (context, settings) {
-      $('select.enhanced', context).once(function() {
+      $('select.formawesome-enhanced', context).once(function() {
         var $label = $(this).parent().find('label');
         $label.css('display', 'none');
         var options = {
           placeholder: $label.text(),
           adaptContainerCssClass: function (c) { return null; },
           adaptDropdownCssClass: function (c) { return null; },
-          minimumResultsForSearch: -1,
+          minimumResultsForSearch: 8,
           selectOnBlur: true
         };
         if ($(this).data('theme') && Drupal.formawesome.theme[$(this).data('theme')]) {

@@ -5,7 +5,7 @@
    */
   Drupal.behaviors.formawesomeFile = {
     attach: function($context, settings) {
-      $('input[type="file"]', $context).once(function(){
+      $('input[type="file"].formawesome-enhanced', $context).once(function(){
         var $wrapper = $('<div class="image-preview formawesome-upload"></div>');
         var $status = $('<span class="formawesome-upload-status"></span>');
         var $button = $('<span class="formawesome-upload-choose">' + Drupal.t('Choose file') + '</span>');
