@@ -29,6 +29,10 @@ function formawesome_form_system_theme_settings_alter(&$form, &$form_state) {
       'title' => t('Wrap buttons'),
       'description' => t('Wrap buttons in form item elements.'),
     ),
+    'wrap_inputs' => array(
+      'title' => t('Wrap inputs'),
+      'description' => t('Place input fields, descriptions, prefixes, suffixes and error messages inside an additional wrapper, to style them independently from the label.'),
+    ),
     'inline_errors' => array(
       'title' => t('Inline errors'),
       'description' => t('Display form errors inline.'),
@@ -384,22 +388,29 @@ function theme_formawesome_element(&$variables) {
     $theme_variables['#required'] = TRUE;
   }
 
+  $input_wrapper_open = '';
+  $input_wrapper_close = '';
+  if (formawesome_feature_enabled('wrap_inputs') && $element['#input'] && !in_array($element['#type'], $includes)) {
+    $input_wrapper_open = '<div class="form-item-input">';
+    $input_wrapper_close = '</div>';
+  }
+
   switch ($element['#title_display']) {
     case 'before':
     case 'invisible':
       $output .= ' ' . theme('form_element_label', $theme_variables);
-      $output .= ' ' . $prefix . $element['#children'] . $suffix . "\n";
+      $output .= ' ' . $input_wrapper_open . $prefix . $element['#children'] . $suffix . "\n";
       break;
 
     case 'after':
-      $output .= ' ' . $prefix . $element['#children'] . $suffix;
+      $output .= ' ' . $input_wrapper_open . $prefix . $element['#children'] . $suffix;
       $output .= ' ' . theme('form_element_label', $theme_variables) . "\n";
       break;
 
     case 'none':
     case 'attribute':
       // Output no label and no required marker, only the children.
-      $output .= ' ' . $prefix . $element['#children'] . $suffix . "\n";
+      $output .= ' ' . $input_wrapper_open . $prefix . $element['#children'] . $suffix . "\n";
       break;
   }
 
@@ -413,7 +424,7 @@ function theme_formawesome_element(&$variables) {
     }
   }
 
-  $output .= "</div>\n";
+  $output .= $input_wrapper_close . "</div>\n";
 
   return $output;
 }
