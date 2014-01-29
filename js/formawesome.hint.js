@@ -8,6 +8,7 @@
       var $hint = $('<div class="form-hint"></div>');
       var added_classes = [];
       var $wrapper = $(this).parents('.form-item').first();
+      $wrapper.addClass('hint-hidden');
       $wrapper.append($hint);
       $(this).bind('keyup focus blur', function(){
         var value = $(this).val();
@@ -29,13 +30,13 @@
           $wrapper.removeClass(c);
         }
 
+        $wrapper.addClass('hint-hidden');
         if (result.text) {
           $hint.text(result.text);
           $wrapper.removeClass('hint-hidden');
         }
         else {
           $hint.text('');
-          $wrapper.addClass('hint-hidden');
         }
 
         if (result.class) {
